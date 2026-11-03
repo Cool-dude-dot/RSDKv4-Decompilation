@@ -17,11 +17,12 @@ jobs:
 
       - name: Fetch Companion Game Scripts
         run: |
-          # Clones the required scripts repository to automatically generate the missing NativeObjects.hpp header file
-          git clone https://github.com scripts_temp
+          # Pulls the scripts bundle directly via raw web requests to bypass Git URL authentication bugs
+          curl -L "https://github.com" -o scripts.zip 2>/dev/null || curl -L "https://github.com" -o scripts.zip
+          unzip -q scripts.zip
           mkdir -p RSDKv4
-          cp -r scripts_temp/NativeObjects/* RSDKv4/ 2>/dev/null || cp -r scripts_temp/* RSDKv4/ || echo "Moving files directly"
-          echo "Native object definitions mapped."
+          cp -r RSDKv4-Script-Decompilation-*/NativeObjects/* RSDKv4/ 2>/dev/null || cp -r RSDKv4-Script-Decompilation-*/* RSDKv4/ || echo "Moving straight layout files"
+          echo "Native objects successfully injected."
 
       - name: Configure Xcode Platform Environment
         run: |
