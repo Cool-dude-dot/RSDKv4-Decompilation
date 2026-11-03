@@ -33,6 +33,15 @@ jobs:
           sudo find scripts_temp -name "NativeObjects.hpp" -exec cp -v {} /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk/usr/include/ \;
           echo "All script architecture headers successfully integrated."
 
+      - name: Fix Repository Folder Hierarchy Mappings
+        run: |
+          # Duplicates all root implementation files into the RSDKv4 folder layout that Xcode is looking for
+          mkdir -p RSDKv4
+          cp -v *.cpp RSDKv4/ 2>/dev/null || true
+          cp -v *.hpp RSDKv4/ 2>/dev/null || true
+          cp -v *.h RSDKv4/ 2>/dev/null || true
+          echo "Workspace structure normalized."
+
       - name: Configure Xcode Platform Environment
         run: |
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
@@ -48,12 +57,10 @@ jobs:
 
       - name: Force Code Patch for iOS Architecture
         run: |
-          # 1. Normalizes general graphics include blocks across all files for mobile compliance
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -exec sed -i '' 's/#include <OpenGL\/gl.h>/#include <OpenGLES\/ES2\/gl.h>/g' {} +
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -exec sed -i '' 's/#include <OpenGL\/glext.h>/\/\/ #include <OpenGL\/glext.h>/g' {} +
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" \) -exec sed -i '' 's/<Vorbis\/vorbisfile.h>/<vorbis\/vorbisfile.h>/g' {} +
           
-          # 2. Dynamic fix for RetroGameLoop macro bug - scans the workspace to find and patch the file wherever it sits
           find . -name "RetroGameLoop.cpp" -exec sed -i '' 's/#ifdef RETRO_USING_OPENGL/#if defined(RETRO_USING_OPENGL) \&\& \!defined(RSDK_USE_GLES)/g' {} +
           
           echo "All code references completely patched for mobile hardware build."
