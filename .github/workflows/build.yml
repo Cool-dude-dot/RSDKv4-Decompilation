@@ -22,19 +22,17 @@ jobs:
 
       - name: Fetch and Inject Official iOS Frameworks
         run: |
-          # 1. Download official pre-compiled SDL2 iOS framework release
-          curl -L https://github.com -o sdl2.zip
-          unzip -q sdl2.zip
-          
-          # 2. Structure dependency layout inside the project environment
+          # 1. Download official pre-compiled SDL2 source structure directly
           mkdir -p dependencies/macOS
           mkdir -p dependencies/iOS/Frameworks
           
-          # 3. Map the correct framework paths for the iOS target compiler
-          cp -r SDL2.xcframework/ios-arm64/SDL2.framework dependencies/iOS/Frameworks/ || true
-          cp -r SDL2.xcframework/ios-arm64_x86_64-simulator/SDL2.framework dependencies/iOS/ || true
+          # Downloads raw source template architecture directly from official master cache
+          curl -L "https://libsdl.org" -o sdl2.dmg
+          hdiutil attach sdl2.dmg
+          cp -r /Volumes/SDL2/SDL2.framework dependencies/iOS/Frameworks/ || true
+          hdiutil detach /Volumes/SDL2 || true
           
-          echo "Frameworks injected successfully."
+          echo "Framework stub routing set up."
 
       - name: Compile Unsigned iOS Binary Framework
         run: |
@@ -50,7 +48,6 @@ jobs:
       - name: Structure Native iOS IPA Payload
         run: |
           mkdir -p Payload
-          # Locates the actual successfully built binary file layout inside Xcode's local store
           TARGET_APP=$(find ~/Library/Developer/Xcode/DerivedData -name "RSDKv4.app" -type d | head -n 1)
           if [ -d "$TARGET_APP" ]; then
             cp -r "$TARGET_APP" Payload/
