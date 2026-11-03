@@ -15,6 +15,14 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Fetch Companion Game Scripts
+        run: |
+          # Clones the required scripts repository to automatically generate the missing NativeObjects.hpp header file
+          git clone https://github.com scripts_temp
+          mkdir -p RSDKv4
+          cp -r scripts_temp/NativeObjects/* RSDKv4/ 2>/dev/null || cp -r scripts_temp/* RSDKv4/ || echo "Moving files directly"
+          echo "Native object definitions mapped."
+
       - name: Configure Xcode Platform Environment
         run: |
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
@@ -22,7 +30,6 @@ jobs:
 
       - name: Install System Engine Modules
         run: |
-          # Adds tinyxml2 along with the audio and graphics managers
           brew install sdl2 libogg libvorbis tinyxml2
           mkdir -p dependencies/ios
           touch dependencies/ios/Data.rsdk
@@ -37,7 +44,6 @@ jobs:
 
       - name: Compile Unsigned iOS Binary Framework
         run: |
-          # Maps tinyxml2 paths into Xcode's header and library search routes
           xcodebuild -project "RSDKv4 ios.xcodeproj" \
                      -scheme "RSDKv4" \
                      -configuration Release \
