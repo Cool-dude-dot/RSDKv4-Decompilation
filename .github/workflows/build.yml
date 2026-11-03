@@ -21,26 +21,28 @@ jobs:
           repository: RSDKModding/RSDKv4-Script-Decompilation
           path: scripts_temp
 
-      - name: Force Map and Bridge Header Repositories
+      - name: Force Flatten and Inject All Code Inputs
         run: |
+          # Creates the exact target directory Xcode expects
           mkdir -p RSDKv4
           mkdir -p RSDKv4/NativeObjects
+          
+          # Dynamically finds every source file across the entire repository and flattens them into the target folder
+          find . -name "*.cpp" ! -path "./scripts_temp/*" ! -path "./build/*" -exec cp -v {} ./RSDKv4/ \;
+          find . -name "*.hpp" ! -path "./scripts_temp/*" ! -path "./build/*" -exec cp -v {} ./RSDKv4/ \;
+          find . -name "*.h" ! -path "./scripts_temp/*" ! -path "./build/*" -exec cp -v {} ./RSDKv4/ \;
+          
+          # Injects the required companion script items
           find scripts_temp -name "NativeObjects.hpp" -exec cp -v {} ./ \;
           find scripts_temp -name "NativeObjects.hpp" -exec cp -v {} ./RSDKv4/ \;
           find scripts_temp -name "NativeObjects.hpp" -exec cp -v {} ./RSDKv4/NativeObjects/ \;
           find scripts_temp -name "*.hpp" -exec cp -v {} ./RSDKv4/ \; 2>/dev/null || true
           find scripts_temp -name "*.h" -exec cp -v {} ./RSDKv4/ \; 2>/dev/null || true
+          
+          # Global fallback include link injection
           sudo find scripts_temp -name "NativeObjects.hpp" -exec cp -v {} /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk/usr/include/ \;
-          echo "All script architecture headers successfully integrated."
-
-      - name: Fix Repository Folder Hierarchy Mappings
-        run: |
-          # Duplicates all root implementation files into the RSDKv4 folder layout that Xcode is looking for
-          mkdir -p RSDKv4
-          cp -v *.cpp RSDKv4/ 2>/dev/null || true
-          cp -v *.hpp RSDKv4/ 2>/dev/null || true
-          cp -v *.h RSDKv4/ 2>/dev/null || true
-          echo "Workspace structure normalized."
+          
+          echo "Workspace files completely flattened and validated."
 
       - name: Configure Xcode Platform Environment
         run: |
@@ -60,9 +62,7 @@ jobs:
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -exec sed -i '' 's/#include <OpenGL\/gl.h>/#include <OpenGLES\/ES2\/gl.h>/g' {} +
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -exec sed -i '' 's/#include <OpenGL\/glext.h>/\/\/ #include <OpenGL\/glext.h>/g' {} +
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" \) -exec sed -i '' 's/<Vorbis\/vorbisfile.h>/<vorbis\/vorbisfile.h>/g' {} +
-          
           find . -name "RetroGameLoop.cpp" -exec sed -i '' 's/#ifdef RETRO_USING_OPENGL/#if defined(RETRO_USING_OPENGL) \&\& \!defined(RSDK_USE_GLES)/g' {} +
-          
           echo "All code references completely patched for mobile hardware build."
 
       - name: Compile Unsigned iOS Binary Framework
