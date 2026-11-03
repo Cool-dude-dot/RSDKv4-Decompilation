@@ -9,19 +9,22 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Fetch Repository Source
+      - name: Fetch Main Engine Source
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Fetch Companion Game Scripts
+      - name: Fetch Companion Game Scripts Natively
+        uses: actions/checkout@v4
+        with:
+          repository: RSDKModding/RSDKv4-Script-Decompilation
+          path: scripts_temp
+
+      - name: Inject Missing Native Headers
         run: |
-          # Pulls the scripts bundle directly via raw web requests to bypass Git URL authentication bugs
-          curl -L "https://github.com" -o scripts.zip 2>/dev/null || curl -L "https://github.com" -o scripts.zip
-          unzip -q scripts.zip
           mkdir -p RSDKv4
-          cp -r RSDKv4-Script-Decompilation-*/NativeObjects/* RSDKv4/ 2>/dev/null || cp -r RSDKv4-Script-Decompilation-*/* RSDKv4/ || echo "Moving straight layout files"
+          cp -r scripts_temp/NativeObjects/* RSDKv4/ 2>/dev/null || cp -r scripts_temp/* RSDKv4/ || echo "Moving files directly"
           echo "Native objects successfully injected."
 
       - name: Configure Xcode Platform Environment
