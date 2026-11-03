@@ -23,11 +23,17 @@ jobs:
       - name: Install System Engine Modules
         run: |
           brew install sdl2 libogg libvorbis
-          # Creates the dummy files Xcode is demanding to see to clear the build check
           mkdir -p dependencies/ios
           touch dependencies/ios/Data.rsdk
           touch dependencies/ios/Default.png
           echo "Placeholder assets generated successfully."
+
+      - name: Patch OpenGL Headers for iOS Architecture
+        run: |
+          # Replaces the desktop Mac graphics framework links with the mobile iPhone graphics framework links
+          sed -i '' 's/#include <OpenGL\/gl.h>/#include <OpenGLES\/ES2\/gl.h>/g' RSDKv4/RetroEngine.hpp
+          sed -i '' 's/#include <OpenGL\/glext.h>/\/\/ #include <OpenGL\/glext.h>/g' RSDKv4/RetroEngine.hpp
+          echo "Graphics pipeline patched for mobile deployment."
 
       - name: Compile Unsigned iOS Binary Framework
         run: |
