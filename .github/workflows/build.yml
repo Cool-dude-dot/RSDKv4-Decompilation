@@ -20,14 +20,11 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
           xcodebuild -version
 
-      - name: Initialize Codebase Dependencies
+      - name: Install Missing Native Engine Libraries
         run: |
-          if [ -f "./dependencies.sh" ]; then
-            chmod +x ./dependencies.sh
-            ./dependencies.sh
-          else
-            echo "No dependency script found, skipping step."
-          fi
+          brew install sdl2 libogg libvorbis theora
+          # Injects the libraries directly into the system search path so Xcode can find them
+          sudo ln -s /opt/homebrew/include/SDL2 /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/SDL2 || true
 
       - name: Compile Unsigned iOS Binary Framework
         run: |
@@ -54,4 +51,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RSDKv4-iOS-Engine
-          path: RSDKv4.ipa
+          path: rsdkv4.ipa
