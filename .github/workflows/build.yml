@@ -18,13 +18,13 @@ jobs:
 
       - name: Generate Native App Definitions Directly
         run: |
-          # Writes the mobile app framework directly using local echo text strings to jump over download blocks
+          # Writes the mobile app framework directly using local echo text strings
           echo '<?xml version="1.0" encoding="UTF-8"?>' > Payload/RSDKv4.app/Info.plist
           echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com">' >> Payload/RSDKv4.app/Info.plist
           echo '<plist version="1.0">' >> Payload/RSDKv4.app/Info.plist
           echo '<dict>' >> Payload/RSDKv4.app/Info.plist
           echo '    <key>CFBundleIdentifier</key><string>org.rsdkmodding.rsdkv4</string>' >> Payload/RSDKv4.app/Info.plist
-          echo '    <key>CFBundleName</key><string>RSDKv4</string>' >> Payload/Payload/RSDKv4.app/Info.plist
+          echo '    <key>CFBundleName</key><string>RSDKv4</string>' >> Payload/RSDKv4.app/Info.plist
           echo '    <key>CFBundleExecutable</key><string>RSDKv4</string>' >> Payload/RSDKv4.app/Info.plist
           echo '    <key>CFBundleVersion</key><string>1.0</string>' >> Payload/RSDKv4.app/Info.plist
           echo '    <key>CFBundleShortVersionString</key><string>1.0</string>' >> Payload/RSDKv4.app/Info.plist
