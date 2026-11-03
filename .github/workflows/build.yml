@@ -22,7 +22,8 @@ jobs:
 
       - name: Install System Engine Modules
         run: |
-          brew install sdl2 libogg libvorbis
+          # Adds tinyxml2 along with the audio and graphics managers
+          brew install sdl2 libogg libvorbis tinyxml2
           mkdir -p dependencies/ios
           touch dependencies/ios/Data.rsdk
           touch dependencies/ios/Default.png
@@ -30,13 +31,13 @@ jobs:
 
       - name: Force Code Patch for iOS Architecture
         run: |
-          # Recursively finds all code files and forcefully replaces desktop OpenGL imports with mobile OpenGLES imports
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -exec sed -i '' 's/#include <OpenGL\/gl.h>/#include <OpenGLES\/ES2\/gl.h>/g' {} +
           find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -exec sed -i '' 's/#include <OpenGL\/glext.h>/\/\/ #include <OpenGL\/glext.h>/g' {} +
           echo "All source files successfully forced into mobile graphics configuration."
 
       - name: Compile Unsigned iOS Binary Framework
         run: |
+          # Maps tinyxml2 paths into Xcode's header and library search routes
           xcodebuild -project "RSDKv4 ios.xcodeproj" \
                      -scheme "RSDKv4" \
                      -configuration Release \
@@ -45,8 +46,8 @@ jobs:
                      CODE_SIGNING_REQUIRED=NO \
                      ONLY_ACTIVE_ARCH=NO \
                      GCC_PREPROCESSOR_DEFINITIONS="RSDK_MOBILE=1 RETRO_MOBILE=1 RSDK_USE_GLES=1" \
-                     HEADER_SEARCH_PATHS="/opt/homebrew/opt/sdl2/include /opt/homebrew/opt/libogg/include /opt/homebrew/opt/libvorbis/include" \
-                     LIBRARY_SEARCH_PATHS="/opt/homebrew/opt/sdl2/lib /opt/homebrew/opt/libogg/lib /opt/homebrew/opt/libvorbis/lib" \
+                     HEADER_SEARCH_PATHS="/opt/homebrew/opt/sdl2/include /opt/homebrew/opt/libogg/include /opt/homebrew/opt/libvorbis/include /opt/homebrew/opt/tinyxml2/include" \
+                     LIBRARY_SEARCH_PATHS="/opt/homebrew/opt/sdl2/lib /opt/homebrew/opt/libogg/lib /opt/homebrew/opt/libvorbis/lib /opt/homebrew/opt/tinyxml2/lib" \
                      clean build
 
       - name: Structure Native iOS IPA Payload
