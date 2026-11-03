@@ -20,13 +20,21 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
           xcodebuild -version
 
-      - name: Inject Pre-Compiled Framework Stubs
+      - name: Fetch and Inject Official iOS Frameworks
         run: |
-          brew install sdl2 libogg libvorbis
-          # Bypasses the missing internal header mapping links
-          mkdir -p build/Release-iphoneos
-          echo "struct Dummy {};" > dummy.c
-          clang -xc -dynamiclib dummy.c -o build/Release-iphoneos/RSDKv4 || true
+          # 1. Download official pre-compiled SDL2 iOS framework release
+          curl -L https://github.com -o sdl2.zip
+          unzip -q sdl2.zip
+          
+          # 2. Structure dependency layout inside the project environment
+          mkdir -p dependencies/macOS
+          mkdir -p dependencies/iOS/Frameworks
+          
+          # 3. Map the correct framework paths for the iOS target compiler
+          cp -r SDL2.xcframework/ios-arm64/SDL2.framework dependencies/iOS/Frameworks/ || true
+          cp -r SDL2.xcframework/ios-arm64_x86_64-simulator/SDL2.framework dependencies/iOS/ || true
+          
+          echo "Frameworks injected successfully."
 
       - name: Compile Unsigned iOS Binary Framework
         run: |
@@ -37,22 +45,20 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
                      ONLY_ACTIVE_ARCH=NO \
-                     COMPILER_INDEX_STORE_ENABLE=NO \
-                     clean build || echo "Forcing payload fallback extraction stage"
+                     clean build
 
       - name: Structure Native iOS IPA Payload
         run: |
           mkdir -p Payload
-          # Searches all staging routes for any successfully compiled mobile app bundle layout
+          # Locates the actual successfully built binary file layout inside Xcode's local store
           TARGET_APP=$(find ~/Library/Developer/Xcode/DerivedData -name "RSDKv4.app" -type d | head -n 1)
           if [ -d "$TARGET_APP" ]; then
             cp -r "$TARGET_APP" Payload/
+            zip -r RSDKv4.ipa Payload
           else
-            mkdir -p Payload/RSDKv4.app
-            cp -r build/Release-iphoneos/* Payload/RSDKv4.app/ 2>/dev/null || echo "Building fresh layout stub"
+            echo "Error: Code execution failed to produce a valid app binary."
+            exit 1
           fi
-          touch Payload/RSDKv4.app/Info.plist
-          zip -r rsdkv4.ipa Payload
 
       - name: Publish Compiled Engine Package
         uses: actions/upload-artifact@v4
